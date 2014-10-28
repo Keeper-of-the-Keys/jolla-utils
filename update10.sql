@@ -1,3 +1,8 @@
+-- Update 9
+DROP INDEX DetailsJoinIndex;
+PRAGMA user_version=10;
+-- End update 9
+
 -- Drop the remove trigger
 DROP TRIGGER RemoveContactDetails;
 -- Preserve the existing state of the Details table
