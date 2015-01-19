@@ -1,0 +1,111 @@
+--- /usr/lib/qt5/qml/Sailfish/Silica/private/DatePicker.js.update10	2014-12-28 18:09:01.990994576 +0200
++++ /usr/lib/qt5/qml/Sailfish/Silica/private/DatePicker.js	2014-12-28 18:19:19.529953760 +0200
+@@ -36,7 +36,20 @@
+ 
+ // if this can change dynamically, needs to be a QML property instead
+ // and also should refer to some settings instead (theme?)
+-var _weekStartsOnMonday = true
++//var _weekStartsOnMonday = true
++
++// Instead of (bool)_weekStartsOnMonday have an (int)_firstDayOfWeek, set through 
++// _setFirstDayOfWeek which is called in QML which in turn is aware of locale settings.
++// To not harm default behvior (first day of week is Monday) the default value is 1.
++var _firstDayOfWeek = 1;
++
++function _setFirstDayOfWeek(dayNo) {
++    if(_firstDayOfWeek != dayNo && dayNo >= 0 && dayNo <= 6) {
++      _firstDayOfWeek = dayNo;
++    }
++    console.log('Set first day of week to ' + _firstDayOfWeek);
++    return _firstDayOfWeek;
++}
+ 
+ function _isLeapYear(year) {
+     return ((year % 4 == 0) && (year % 100 != 0))
+@@ -63,16 +76,23 @@ function _maxDaysForMonth(month, year) {
+ // previous month
+ function _getStartDateForMonthView(year, month) {
+     var start = new Date(Date.UTC(year, month-1, 1))
+-    if (start.getDay() > 0) {
+-        start.setDate(start.getDate() - start.getDay())
+-    }
+-    if (_weekStartsOnMonday) {
+-        start.setDate(start.getDate() + 1)
+-        if (start.getDate() > 1 && start.getMonth()+1 === month) {
+-            // shifting forward to Monday skipped over the 1st of this month, go back a week
+-            // to the last Monday of last month
+-            start.setDate(start.getDate() - 7)
+-        }
++
++// Old Logic
++//    if (start.getDay() > 0) {
++//        start.setDate(start.getDate() - start.getDay())
++//    }
++//    if (_weekStartsOnMonday) {
++//        start.setDate(start.getDate() + 1)
++//        if (start.getDate() > 1 && start.getMonth()+1 === month) {
++//            // shifting forward to Monday skipped over the 1st of this month, go back a week
++//            // to the last Monday of last month
++//            start.setDate(start.getDate() - 7)
++//        }
++//    }
++// New logic using offsets.
++    if (start.getDay() != _firstDayOfWeek) {
++      // Math used to offset  (7 - (firstdayoffset - startDay))%7
++        start.setDate(start.getDate() - ((7 - (_firstDayOfWeek - start.getDay())) % 7))
+     }
+     return start
+ }
+--- /usr/lib/qt5/qml/Sailfish/Silica/DatePicker.qml.update10	2014-12-28 18:11:20.989315939 +0200
++++ /usr/lib/qt5/qml/Sailfish/Silica/DatePicker.qml	2014-12-28 18:12:10.872544989 +0200
+@@ -51,6 +51,7 @@ Item {
+     property date date: new Date()
+     property string dateText: Qt.formatDate(date)
+     property alias viewMoving: view.viewMovingImmediate
++    property int firstDayOfWeek: DatePickerScript._setFirstDayOfWeek(Qt.locale().firstDayOfWeek)
+ 
+     property Component modelComponent
+     property Component delegate: Component {
+--- /usr/share/jolla-calendar/pages/MonthPage.qml.orig	2014-11-12 01:25:41.600602303 +0200
++++ /usr/share/jolla-calendar/pages/MonthPage.qml	2014-12-28 18:03:25.371797302 +0200
+@@ -7,6 +7,8 @@ import "Util.js" as Util
+ Page {
+     id: root
+ 
++    property bool initialLoadDone
++
+     function addEvent() {
+         var now = new Date
+         var d = datePicker.date
+@@ -71,8 +73,8 @@ Page {
+                     delegate: Label {
+                         y: 3
+                         opacity: 0.6
+-                        // 3 Jan 2000 was a Monday
+-                        text: Qt.formatDateTime(new Date(2000, 0, 3 + index, 12), "ddd")
++                        // 2 Jan 2000 was a Sunday
++                        text: Qt.formatDateTime(new Date(2000, 0, 2 + Qt.locale().firstDayOfWeek + index, 12), "ddd")
+                         color: Theme.highlightColor
+                         width: parent.width / 7
+                         font.pixelSize: Theme.fontSizeSmall
+@@ -109,6 +111,11 @@ Page {
+             when: !datePicker.viewMoving
+         }
+ 
++        Connections {
++            target: !root.initialLoadDone ? agendaModel : null
++            onUpdated: root.initialLoadDone = true
++        }
++
+         VerticalScrollDecorator {}
+         Column {
+             width: view.width
+@@ -245,7 +252,7 @@ Page {
+             Item {
+                 width: parent.width
+                 height: placeholderText.height + 2*Theme.paddingLarge
+-                visible: view.count === 0
++                visible: view.count === 0 && root.initialLoadDone
+ 
+                 Label {
+                     id: placeholderText
