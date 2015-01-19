@@ -1,0 +1,30 @@
+What is this patch?
+-------------------
+This patch makes jolla-calendar respect the local first day of the week.
+
+It has been tested with the following locales: 
+   en_GB (monday)
+   nl_NL (monday)
+   he_IL (sunday)
+   ar_KW (saturday)
+
+Setting the locale
+------------------
+To actually switch your locale for the needs of jolla-calender it is enough to 
+set the LC_TIME environment variable in /var/lib/environment/nemo/locale.conf
+
+I have not provided a GUI way to change this and the above file will be 
+overwritten when you change the language/localization settings on your phone,
+when LC_TIME is not set LC_ALL or LANG will be used, so if your language is set 
+to the time locale you want you don't need to make this setting.
+
+LICENCE
+-------
+All sources are considered 'propriatary' by jolla (meaning they don't officially 
+accept patches) but carry BSD headers, I do not wish to change the license in 
+any way so that Jolla can hopefully include my patch, mention of my name in the 
+source will be appreciated :).
+
+AUTHOR
+------
+2015/5775 - E.S. Rosenberg a.k.a. Keeper of the Keys
