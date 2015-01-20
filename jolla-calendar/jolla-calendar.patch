@@ -57,7 +57,7 @@
      return start
  }
 --- /usr/lib/qt5/qml/Sailfish/Silica/DatePicker.qml.update10	2014-12-28 18:11:20.989315939 +0200
-+++ /usr/lib/qt5/qml/Sailfish/Silica/DatePicker.qml	2014-12-28 18:12:10.872544989 +0200
++++ /usr/lib/qt5/qml/Sailfish/Silica/DatePicker.qml	2015-01-20 02:46:20.651694833 +0200
 @@ -51,6 +51,7 @@ Item {
      property date date: new Date()
      property string dateText: Qt.formatDate(date)
@@ -66,6 +66,17 @@
  
      property Component modelComponent
      property Component delegate: Component {
+--- /usr/lib/qt5/qml/Sailfish/Silica/DatePickerDialog.qml.orig	2014-11-13 20:37:33.916796022 +0200
++++ /usr/lib/qt5/qml/Sailfish/Silica/DatePickerDialog.qml	2015-01-20 02:42:23.969137254 +0200
+@@ -278,7 +278,7 @@ Dialog {
+     ListModel {
+         id: weekdayModel
+         Component.onCompleted: {
+-            var dt = new Date(2012, 0, 2)   // Jan 2, 2012 is a Monday
++            var dt = new Date(2012, 0, 1 + Qt.locale().firstDayOfWeek)   // Jan 1, 2012 is a Sunday
+             for (var i=0; i<7; i++) {
+                 append({"name": Qt.formatDateTime(dt, "ddd")})
+                 dt.setDate(dt.getDate() + 1)
 --- /usr/share/jolla-calendar/pages/MonthPage.qml.orig	2014-11-12 01:25:41.600602303 +0200
 +++ /usr/share/jolla-calendar/pages/MonthPage.qml	2014-12-28 18:03:25.371797302 +0200
 @@ -7,6 +7,8 @@ import "Util.js" as Util
